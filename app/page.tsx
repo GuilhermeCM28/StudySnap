@@ -87,6 +87,7 @@ export default function Home() {
   const [flipped, setFlipped] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<"generate" | "mydecks">("generate");
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [showGenerator, setShowGenerator] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
@@ -308,7 +309,17 @@ export default function Home() {
                 <button className="btn-primary" onClick={handleLogin} style={{ gap: "0.5rem", padding: "0.875rem 2rem", fontSize: "1rem" }}>
                   <GoogleIcon /> Entrar com Google
                 </button>
-                <button className="btn-outline" style={{ padding: "0.875rem 2rem", fontSize: "1rem" }} onClick={() => document.getElementById('study-text')?.focus()}>
+                <button
+                  className="btn-outline"
+                  style={{ padding: "0.875rem 2rem", fontSize: "1rem" }}
+                  onClick={() => {
+                    setShowGenerator(true);
+                    setTimeout(() => {
+                      document.getElementById('guest-generator')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      document.getElementById('study-text-guest')?.focus();
+                    }, 50);
+                  }}
+                >
                   Experimentar sem login
                 </button>
               </div>
@@ -327,6 +338,70 @@ export default function Home() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* ── Logged-out generator ── */}
+          {!user && showGenerator && (
+            <div id="guest-generator" className="animate-fade-in-up" style={{ marginTop: "2rem" }}>
+              <div className="glass-card" style={{ padding: "1.25rem", marginBottom: "0.875rem" }}>
+                <label
+                  htmlFor="study-text-guest"
+                  style={{ display: "block", fontSize: "0.8125rem", fontWeight: 500, color: "var(--text-secondary)", marginBottom: "0.625rem", letterSpacing: "0.01em" }}
+                >
+                  TEXTO PARA ESTUDO
+                </label>
+                <textarea
+                  id="study-text-guest"
+                  rows={7}
+                  placeholder="Cole aqui o texto que você quer estudar..."
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  style={{ width: "100%", background: "transparent", border: "none", outline: "none", color: "var(--text-primary)", resize: "none", fontSize: "0.9375rem", lineHeight: 1.6 }}
+                />
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "0.5rem" }}>
+                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{text.length} caracteres</span>
+                </div>
+              </div>
+              <button
+                onClick={handleGenerate}
+                disabled={loading || text.trim().length < 20}
+                className="btn-primary"
+                style={{ width: "100%", padding: "0.875rem", fontSize: "0.9375rem" }}
+              >
+                {loading ? <>Gerando flashcards <LoadingDots /></> : <><SparkleIcon /> Gerar Flashcards com IA</>}
+              </button>
+
+              {flashcards.length > 0 && (
+                <div style={{ marginTop: "2rem" }} className="animate-fade-in-up">
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem" }}>
+                    <div>
+                      <h2 style={{ fontSize: "1.0625rem", fontWeight: 600, color: "var(--text-primary)", marginBottom: "0.25rem" }}>Flashcards gerados</h2>
+                      <p style={{ fontSize: "0.8125rem", color: "var(--text-secondary)" }}>{flashcards.length} cartões · clique para revelar</p>
+                    </div>
+                    <button className="btn-primary" onClick={handleLogin} style={{ gap: "0.5rem", padding: "0.5rem 1rem", fontSize: "0.8125rem" }}>
+                      <GoogleIcon /> Salvar com login
+                    </button>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                    {flashcards.map((card, i) => {
+                      const isFlipped = flipped === i;
+                      return (
+                        <div key={i} onClick={() => setFlipped(isFlipped ? null : i)} className="glass-card" style={{ padding: "1.25rem 1.5rem", cursor: "pointer" }}>
+                          <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
+                            <div style={{ flexShrink: 0, width: "24px", height: "24px", borderRadius: "6px", background: isFlipped ? "rgba(34,197,94,0.12)" : "rgba(139,92,246,0.12)", border: `1px solid ${isFlipped ? "rgba(34,197,94,0.25)" : "rgba(139,92,246,0.25)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6875rem", fontWeight: 600, color: isFlipped ? "#4ade80" : "var(--accent-light)" }}>{i + 1}</div>
+                            <div style={{ flex: 1 }}>
+                              <p style={{ fontSize: "0.6875rem", fontWeight: 500, color: isFlipped ? "#4ade80" : "var(--accent-light)", marginBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{isFlipped ? "Resposta" : "Pergunta"}</p>
+                              <p style={{ fontSize: "0.9375rem", color: "var(--text-primary)", lineHeight: 1.55 }}>{isFlipped ? card.back : card.front}</p>
+                            </div>
+                            <span style={{ flexShrink: 0, fontSize: "0.6875rem", color: "var(--text-muted)" }}>{isFlipped ? "←" : "→"}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
