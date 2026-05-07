@@ -171,9 +171,9 @@ export default function Home() {
         >
           <div
             style={{
-              maxWidth: "720px",
+              maxWidth: "1100px",
               margin: "0 auto",
-              padding: "0 1.5rem",
+              padding: "0 2rem",
               height: "64px",
               display: "flex",
               alignItems: "center",
@@ -220,63 +220,121 @@ export default function Home() {
         </header>
 
         {/* ── Main Content ── */}
-        <main style={{ flex: 1, maxWidth: "720px", width: "100%", margin: "0 auto", padding: "2.5rem 1.5rem 4rem" }}>
+        <main style={{ flex: 1, maxWidth: "1100px", width: "100%", margin: "0 auto", padding: "2.5rem 2rem 4rem" }}>
 
-          {/* Page title */}
-          <div style={{ marginBottom: "2rem" }}>
-            <h1 style={{ fontSize: "1.75rem", fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text-primary)", marginBottom: "0.375rem" }}>
-              Seus <span className="gradient-text">Flashcards</span>
-            </h1>
-            <p style={{ fontSize: "0.9375rem", color: "var(--text-secondary)" }}>
-              Cole um texto e deixe a IA gerar cartões de estudo automaticamente.
-            </p>
-          </div>
+          {/* Page title — only for logged-in users */}
+          {user && (
+            <div style={{ marginBottom: "2rem" }}>
+              <h1 style={{ fontSize: "2rem", fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text-primary)", marginBottom: "0.5rem" }}>
+                Olá, <span className="gradient-text">{user.email?.split("@")[0]}</span> 👋
+              </h1>
+              <p style={{ fontSize: "0.9375rem", color: "var(--text-secondary)" }}>
+                Cole um texto e deixe a IA gerar cartões de estudo automaticamente.
+              </p>
+            </div>
+          )}
 
-          {/* Tabs */}
-          <div
-            style={{
-              display: "inline-flex",
-              gap: "0.25rem",
-              background: "var(--bg-card)",
-              border: "1px solid var(--border-subtle)",
-              borderRadius: "var(--radius-xl)",
-              padding: "0.25rem",
-              marginBottom: "2rem",
-            }}
-          >
-            {(["generate", "mydecks"] as const).map((tab) => {
-              const active = activeTab === tab;
-              return (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.375rem",
-                    padding: "0.5rem 1rem",
-                    borderRadius: "var(--radius-lg)",
-                    border: "none",
-                    fontFamily: "inherit",
-                    fontSize: "0.875rem",
-                    fontWeight: 500,
-                    cursor: "pointer",
-                    transition: "all var(--transition)",
-                    background: active ? "var(--accent)" : "transparent",
-                    color: active ? "#fff" : "var(--text-secondary)",
-                    boxShadow: active ? "0 2px 12px var(--accent-glow)" : "none",
-                  }}
-                >
-                  {tab === "generate" ? <CardIcon /> : <LayersIcon />}
-                  {tab === "generate" ? "Gerar" : `Meus Decks${decks.length > 0 ? ` (${decks.length})` : ""}`}
+          {/* Tabs — only shown when logged in */}
+          {user && (
+            <div
+              style={{
+                display: "inline-flex",
+                gap: "0.25rem",
+                background: "var(--bg-card)",
+                border: "1px solid var(--border-subtle)",
+                borderRadius: "var(--radius-xl)",
+                padding: "0.25rem",
+                marginBottom: "2rem",
+              }}
+            >
+              {(["generate", "mydecks"] as const).map((tab) => {
+                const active = activeTab === tab;
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.375rem",
+                      padding: "0.5rem 1rem",
+                      borderRadius: "var(--radius-lg)",
+                      border: "none",
+                      fontFamily: "inherit",
+                      fontSize: "0.875rem",
+                      fontWeight: 500,
+                      cursor: "pointer",
+                      transition: "all var(--transition)",
+                      background: active ? "var(--accent)" : "transparent",
+                      color: active ? "#fff" : "var(--text-secondary)",
+                      boxShadow: active ? "0 2px 12px var(--accent-glow)" : "none",
+                    }}
+                  >
+                    {tab === "generate" ? <CardIcon /> : <LayersIcon />}
+                    {tab === "generate" ? "Gerar" : `Meus Decks${decks.length > 0 ? ` (${decks.length})` : ""}`}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* ── Logged-out: hero CTA ── */}
+          {!user && (
+            <div className="animate-fade-in-up" style={{ textAlign: "center", padding: "2rem 0 3rem" }}>
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  padding: "0.375rem 1rem",
+                  background: "rgba(139,92,246,0.1)",
+                  border: "1px solid rgba(139,92,246,0.3)",
+                  borderRadius: "9999px",
+                  fontSize: "0.8125rem",
+                  color: "var(--accent-light)",
+                  marginBottom: "1.5rem",
+                }}
+              >
+                <SparkleIcon /> Powered by IA
+              </div>
+              <h1 style={{ fontSize: "clamp(2rem, 5vw, 3.25rem)", fontWeight: 800, letterSpacing: "-0.03em", color: "var(--text-primary)", marginBottom: "1rem", lineHeight: 1.15 }}>
+                Transforme qualquer texto em<br />
+                <span className="gradient-text">flashcards de estudo</span>
+              </h1>
+              <p style={{ fontSize: "1.0625rem", color: "var(--text-secondary)", marginBottom: "2.5rem", maxWidth: "480px", margin: "0 auto 2.5rem" }}>
+                Cole um texto e nossa IA gera cartões de pergunta e resposta em segundos.
+              </p>
+              <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
+                <button className="btn-primary" onClick={handleLogin} style={{ gap: "0.5rem", padding: "0.875rem 2rem", fontSize: "1rem" }}>
+                  <GoogleIcon /> Entrar com Google
                 </button>
-              );
-            })}
-          </div>
+                <button className="btn-outline" style={{ padding: "0.875rem 2rem", fontSize: "1rem" }} onClick={() => document.getElementById('study-text')?.focus()}>
+                  Experimentar sem login
+                </button>
+              </div>
 
-          {/* ── Tab: Generate ── */}
-          {activeTab === "generate" && (
-            <div className="animate-fade-in-up">
+              {/* Feature cards */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", marginTop: "4rem", textAlign: "left" }}>
+                {[
+                  { icon: <SparkleIcon />, title: "IA Generativa", desc: "GPT-4o mini gera perguntas inteligentes a partir do seu texto" },
+                  { icon: <CardIcon />, title: "Flashcards interativos", desc: "Clique para revelar a resposta e fixar o conteúdo" },
+                  { icon: <LayersIcon />, title: "Salve seus decks", desc: "Organize e acesse seus baralhos a qualquer momento" },
+                ].map((f, i) => (
+                  <div key={i} className="glass-card" style={{ padding: "1.5rem" }}>
+                    <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent-light)", marginBottom: "0.875rem" }}>{f.icon}</div>
+                    <p style={{ fontWeight: 600, fontSize: "0.9375rem", color: "var(--text-primary)", marginBottom: "0.375rem" }}>{f.title}</p>
+                    <p style={{ fontSize: "0.8125rem", color: "var(--text-secondary)", lineHeight: 1.5 }}>{f.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Logged-in: 2-column layout ── */}
+          {user && activeTab === "generate" && (
+            <div className="animate-fade-in-up" style={{ display: "grid", gridTemplateColumns: flashcards.length > 0 ? "1fr 1fr" : "1fr", gap: "1.5rem", alignItems: "start", transition: "grid-template-columns 0.4s ease" }}>
+              {/* LEFT: Input */}
+              <div>
               {/* Textarea card */}
               <div className="glass-card" style={{ padding: "1.25rem", marginBottom: "0.875rem" }}>
                 <label
@@ -321,179 +379,81 @@ export default function Home() {
                   <><SparkleIcon /> Gerar Flashcards com IA</>
                 )}
               </button>
-
-              {/* Flashcards result */}
-              {flashcards.length > 0 && (
-                <div style={{ marginTop: "2.5rem" }} className="animate-fade-in-up">
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem" }}>
-                    <div>
-                      <h2 style={{ fontSize: "1.0625rem", fontWeight: 600, color: "var(--text-primary)", marginBottom: "0.25rem" }}>
-                        Seus Flashcards
-                      </h2>
-                      <p style={{ fontSize: "0.8125rem", color: "var(--text-secondary)" }}>
-                        {flashcards.length} {flashcards.length === 1 ? "cartão gerado" : "cartões gerados"} · clique para revelar
-                      </p>
-                    </div>
-                    {user && (
-                      <button
-                        onClick={handleSave}
-                        className="btn-primary"
-                        style={{
-                          background: saveSuccess ? "var(--accent-dark)" : undefined,
-                          padding: "0.5rem 1rem",
-                          fontSize: "0.8125rem",
-                        }}
-                      >
-                        {saveSuccess ? "✓ Salvo!" : "Salvar Deck"}
-                      </button>
-                    )}
-                  </div>
-
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
-                    {flashcards.map((card, i) => {
-                      const isFlipped = flipped === i;
-                      return (
-                        <div
-                          key={i}
-                          onClick={() => setFlipped(isFlipped ? null : i)}
-                          className="glass-card"
-                          style={{
-                            padding: "1.375rem 1.5rem",
-                            cursor: "pointer",
-                            animationDelay: `${i * 60}ms`,
-                          }}
-                        >
-                          <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem" }}>
-                            {/* Index badge */}
-                            <div
-                              style={{
-                                flexShrink: 0,
-                                width: "28px",
-                                height: "28px",
-                                borderRadius: "8px",
-                                background: isFlipped ? "rgba(34,197,94,0.12)" : "rgba(139,92,246,0.12)",
-                                border: `1px solid ${isFlipped ? "rgba(34,197,94,0.25)" : "rgba(139,92,246,0.25)"}`,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                fontSize: "0.6875rem",
-                                fontWeight: 600,
-                                color: isFlipped ? "#4ade80" : "var(--accent-light)",
-                                transition: "all var(--transition)",
-                              }}
-                            >
-                              {i + 1}
-                            </div>
-
-                            <div style={{ flex: 1 }}>
-                              <p style={{ fontSize: "0.75rem", fontWeight: 500, color: isFlipped ? "#4ade80" : "var(--accent-light)", marginBottom: "0.5rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                                {isFlipped ? "Resposta" : "Pergunta"}
-                              </p>
-                              <p style={{ fontSize: "0.9375rem", color: "var(--text-primary)", lineHeight: 1.55 }}>
-                                {isFlipped ? card.back : card.front}
-                              </p>
-                            </div>
-
-                            <div
-                              style={{
-                                flexShrink: 0,
-                                fontSize: "0.6875rem",
-                                color: "var(--text-muted)",
-                                marginTop: "0.25rem",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "0.25rem",
-                              }}
-                            >
-                              {isFlipped ? "←" : "→"}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
-          )}
 
-          {/* ── Tab: My Decks ── */}
-          {activeTab === "mydecks" && (
-            <div className="animate-fade-in-up">
-              {!user ? (
-                <div
-                  className="glass-card"
-                  style={{ padding: "4rem 2rem", textAlign: "center" }}
-                >
-                  <div
-                    style={{
-                      width: "56px", height: "56px", borderRadius: "16px",
-                      background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.25)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      margin: "0 auto 1.25rem", color: "var(--accent-light)",
-                    }}
-                  >
-                    <LayersIcon />
+            {/* RIGHT: Flashcards result */}
+            {flashcards.length > 0 && (
+              <div className="animate-fade-in-up">
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem" }}>
+                  <div>
+                    <h2 style={{ fontSize: "1.0625rem", fontWeight: 600, color: "var(--text-primary)", marginBottom: "0.25rem" }}>Flashcards gerados</h2>
+                    <p style={{ fontSize: "0.8125rem", color: "var(--text-secondary)" }}>
+                      {flashcards.length} {flashcards.length === 1 ? "cartão" : "cartões"} · clique para revelar
+                    </p>
                   </div>
-                  <h3 style={{ fontSize: "1.0625rem", fontWeight: 600, color: "var(--text-primary)", marginBottom: "0.5rem" }}>
-                    Faça login para ver seus decks
-                  </h3>
-                  <p style={{ fontSize: "0.875rem", color: "var(--text-secondary)", marginBottom: "1.75rem" }}>
-                    Salve e acesse seus flashcards em qualquer lugar.
-                  </p>
-                  <button className="btn-primary" onClick={handleLogin} style={{ gap: "0.5rem" }}>
-                    <GoogleIcon />
-                    Entrar com Google
+                  <button
+                    onClick={handleSave}
+                    className="btn-primary"
+                    style={{ background: saveSuccess ? "var(--accent-dark)" : undefined, padding: "0.5rem 1rem", fontSize: "0.8125rem" }}
+                  >
+                    {saveSuccess ? "✓ Salvo!" : "Salvar Deck"}
                   </button>
                 </div>
-              ) : decks.length === 0 ? (
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxHeight: "70vh", overflowY: "auto", paddingRight: "0.25rem" }}>
+                  {flashcards.map((card, i) => {
+                    const isFlipped = flipped === i;
+                    return (
+                      <div
+                        key={i}
+                        onClick={() => setFlipped(isFlipped ? null : i)}
+                        className="glass-card"
+                        style={{ padding: "1rem 1.25rem", cursor: "pointer", animationDelay: `${i * 60}ms` }}
+                      >
+                        <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
+                          <div style={{ flexShrink: 0, width: "24px", height: "24px", borderRadius: "6px", background: isFlipped ? "rgba(34,197,94,0.12)" : "rgba(139,92,246,0.12)", border: `1px solid ${isFlipped ? "rgba(34,197,94,0.25)" : "rgba(139,92,246,0.25)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6875rem", fontWeight: 600, color: isFlipped ? "#4ade80" : "var(--accent-light)", transition: "all var(--transition)" }}>
+                            {i + 1}
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <p style={{ fontSize: "0.6875rem", fontWeight: 500, color: isFlipped ? "#4ade80" : "var(--accent-light)", marginBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{isFlipped ? "Resposta" : "Pergunta"}</p>
+                            <p style={{ fontSize: "0.875rem", color: "var(--text-primary)", lineHeight: 1.5 }}>{isFlipped ? card.back : card.front}</p>
+                          </div>
+                          <span style={{ flexShrink: 0, fontSize: "0.6875rem", color: "var(--text-muted)" }}>{isFlipped ? "←" : "→"}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+          {/* ── Tab: My Decks (logged in) ── */}
+          {user && activeTab === "mydecks" && (
+            <div className="animate-fade-in-up">
+              {decks.length === 0 ? (
                 <div className="glass-card" style={{ padding: "4rem 2rem", textAlign: "center" }}>
-                  <div
-                    style={{
-                      width: "56px", height: "56px", borderRadius: "16px",
-                      background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.25)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      margin: "0 auto 1.25rem", color: "var(--accent-light)",
-                    }}
-                  >
+                  <div style={{ width: "56px", height: "56px", borderRadius: "16px", background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.25)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.25rem", color: "var(--accent-light)" }}>
                     <LayersIcon />
                   </div>
-                  <h3 style={{ fontSize: "1.0625rem", fontWeight: 600, color: "var(--text-primary)", marginBottom: "0.5rem" }}>
-                    Nenhum deck salvo ainda
-                  </h3>
-                  <p style={{ fontSize: "0.875rem", color: "var(--text-secondary)", marginBottom: "1.75rem" }}>
-                    Gere flashcards e salve seus primeiros decks.
-                  </p>
-                  <button className="btn-outline" onClick={() => setActiveTab("generate")}>
-                    Gerar agora
-                  </button>
+                  <h3 style={{ fontSize: "1.0625rem", fontWeight: 600, color: "var(--text-primary)", marginBottom: "0.5rem" }}>Nenhum deck salvo ainda</h3>
+                  <p style={{ fontSize: "0.875rem", color: "var(--text-secondary)", marginBottom: "1.75rem" }}>Gere flashcards e salve seus primeiros decks.</p>
+                  <button className="btn-outline" onClick={() => setActiveTab("generate")}>Gerar agora</button>
                 </div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "1rem" }}>
                   {decks.map((deck, i) => (
-                    <div
-                      key={deck.id}
-                      className="glass-card"
-                      style={{ padding: "1.25rem 1.5rem", animationDelay: `${i * 60}ms` }}
-                    >
+                    <div key={deck.id} className="glass-card" style={{ padding: "1.375rem 1.5rem", animationDelay: `${i * 60}ms` }}>
                       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1rem" }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontWeight: 600, fontSize: "0.9375rem", color: "var(--text-primary)", marginBottom: "0.375rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {deck.title}
-                          </p>
+                          <p style={{ fontWeight: 600, fontSize: "0.9375rem", color: "var(--text-primary)", marginBottom: "0.5rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{deck.title}</p>
                           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                            <span className="badge" style={{ fontSize: "0.6875rem" }}>
-                              {deck.flashcards.length} cards
-                            </span>
-                            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                              {new Date(deck.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
-                            </span>
+                            <span className="badge" style={{ fontSize: "0.6875rem" }}>{deck.flashcards.length} cards</span>
+                            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{new Date(deck.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}</span>
                           </div>
                         </div>
-                        <button className="btn-danger" onClick={() => handleDelete(deck.id)}>
-                          <TrashIcon />
-                          Deletar
-                        </button>
+                        <button className="btn-danger" onClick={() => handleDelete(deck.id)}><TrashIcon /> Deletar</button>
                       </div>
                     </div>
                   ))}
