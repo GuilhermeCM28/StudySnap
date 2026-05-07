@@ -36,6 +36,31 @@
   --foreground: #f8fafc;
 }
 
+:root.theme-light {
+  color-scheme: light;
+
+  --bg-primary: #f8fafc;
+  --bg-secondary: #e2e8f0;
+  --bg-card: rgba(255, 255, 255, 0.9);
+  --bg-card-hover: rgba(255, 255, 255, 0.95);
+  --border-subtle: rgba(15, 23, 42, 0.12);
+  --border-hover: rgba(139, 92, 246, 0.28);
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+
+  --accent: #7c3aed;
+  --accent-dark: #5b21b6;
+  --accent-light: #c4b5fd;
+  --accent-glow: rgba(139, 92, 246, 0.18);
+
+  --color-background: #f8fafc;
+  --color-foreground: #0f172a;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;

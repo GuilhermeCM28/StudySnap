@@ -65,6 +65,23 @@ function SparkleIcon() {
   );
 }
 
+function SunIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="5" />
+      <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+    </svg>
+  );
+}
+
+function MoonIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12.79A9 9 0 0111.21 3 7 7 0 0012 21a9 9 0 009-8.21z" />
+    </svg>
+  );
+}
+
 // ─── Loading Dots ───────────────────────────────────────────────────────────
 function LoadingDots() {
   return (
@@ -167,14 +184,28 @@ export default function Home() {
   const [previewDeck, setPreviewDeck] = useState<Deck | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [toastId, setToastId] = useState(0);
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
 
   useEffect(() => {
+    const storedTheme = window.localStorage.getItem("theme");
+    const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+    const initialTheme = storedTheme === "light" || storedTheme === "dark" ? storedTheme : prefersDark ? "dark" : "light";
+    setTheme(initialTheme);
+    document.documentElement.classList.toggle("theme-light", initialTheme === "light");
+
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
     supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) loadDecks();
     });
   }, []);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("theme-light", theme === "light");
+    window.localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme((prev) => (prev === "dark" ? "light" : "dark"));
 
   useEffect(() => {
     if (user) loadDecks();
@@ -312,6 +343,14 @@ export default function Home() {
             </div>
 
             {/* Auth */}
+            <button
+              className="btn-outline"
+              onClick={toggleTheme}
+              style={{ padding: "0.375rem 0.875rem", gap: "0.5rem", display: "inline-flex", alignItems: "center" }}
+            >
+              {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+              {theme === "dark" ? "Claro" : "Escuro"}
+            </button>
             {user ? (
               <div style={{ display: "flex", alignItems: "center", gap: "0.875rem" }}>
                 <span style={{ fontSize: "0.8125rem", color: "var(--text-muted)" }}>{user.email}</span>
