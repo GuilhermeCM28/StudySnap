@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase";
 
 type Flashcard = { front: string; back: string };
 type Deck = { id: string; title: string; flashcards: Flashcard[]; created_at: string };
+type Toast = { id: number; message: string; type: "success" | "error" | "info" };
 
 // ─── Icons (inline SVG) ────────────────────────────────────────────────────
 function BoltIcon({ size = 20 }: { size?: number }) {
@@ -75,6 +76,80 @@ function LoadingDots() {
   );
 }
 
+// ─── Close Icon ─────────────────────────────────────────────────────────────
+function XIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  );
+}
+
+// ─── Toast Notification ─────────────────────────────────────────────────────
+function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: number) => void }) {
+  return (
+    <div style={{ position: "fixed", bottom: "1.5rem", right: "1.5rem", zIndex: 999, display: "flex", flexDirection: "column", gap: "0.5rem", pointerEvents: "none" }}>
+      {toasts.map((t) => (
+        <div key={t.id} className="toast-item" style={{
+          display: "flex", alignItems: "center", gap: "0.75rem",
+          padding: "0.75rem 1rem",
+          background: t.type === "success" ? "rgba(34,197,94,0.15)" : t.type === "error" ? "rgba(239,68,68,0.15)" : "rgba(139,92,246,0.15)",
+          border: `1px solid ${t.type === "success" ? "rgba(34,197,94,0.3)" : t.type === "error" ? "rgba(239,68,68,0.3)" : "rgba(139,92,246,0.3)"}`,
+          borderRadius: "var(--radius-lg)",
+          backdropFilter: "blur(12px)",
+          color: t.type === "success" ? "#4ade80" : t.type === "error" ? "#f87171" : "var(--accent-light)",
+          fontSize: "0.875rem", fontWeight: 500,
+          boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+          pointerEvents: "all", minWidth: "220px", maxWidth: "320px",
+        }}>
+          <span style={{ flex: 1 }}>{t.message}</span>
+          <button onClick={() => onRemove(t.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "inherit", opacity: 0.7, padding: "2px", display: "flex" }}><XIcon /></button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Deck Preview Modal ──────────────────────────────────────────────────────
+function DeckModal({ deck, onClose }: { deck: Deck; onClose: () => void }) {
+  const [flipped, setFlipped] = useState<number | null>(null);
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onClose]);
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(2,6,23,0.85)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
+      <div onClick={(e) => e.stopPropagation()} className="glass-card" style={{ width: "100%", maxWidth: "640px", maxHeight: "80vh", display: "flex", flexDirection: "column", padding: "1.5rem" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem" }}>
+          <div>
+            <h2 style={{ fontSize: "1.0625rem", fontWeight: 600, color: "var(--text-primary)", marginBottom: "0.25rem" }}>{deck.title}</h2>
+            <p style={{ fontSize: "0.8125rem", color: "var(--text-secondary)" }}>{deck.flashcards.length} cartões · clique para revelar</p>
+          </div>
+          <button onClick={onClose} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid var(--border-subtle)", borderRadius: "8px", color: "var(--text-muted)", cursor: "pointer", padding: "0.375rem", display: "flex" }}><XIcon /></button>
+        </div>
+        <div style={{ overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.75rem", paddingRight: "0.25rem" }}>
+          {deck.flashcards.map((card, i) => {
+            const isFlipped = flipped === i;
+            return (
+              <div key={i} onClick={() => setFlipped(isFlipped ? null : i)} className="glass-card" style={{ padding: "1rem 1.25rem", cursor: "pointer" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
+                  <div style={{ flexShrink: 0, width: "24px", height: "24px", borderRadius: "6px", background: isFlipped ? "rgba(34,197,94,0.12)" : "rgba(139,92,246,0.12)", border: `1px solid ${isFlipped ? "rgba(34,197,94,0.25)" : "rgba(139,92,246,0.25)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.6875rem", fontWeight: 600, color: isFlipped ? "#4ade80" : "var(--accent-light)" }}>{i + 1}</div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: "0.6875rem", fontWeight: 500, color: isFlipped ? "#4ade80" : "var(--accent-light)", marginBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{isFlipped ? "Resposta" : "Pergunta"}</p>
+                    <p style={{ fontSize: "0.9375rem", color: "var(--text-primary)", lineHeight: 1.55 }}>{isFlipped ? card.back : card.front}</p>
+                  </div>
+                  <span style={{ flexShrink: 0, fontSize: "0.6875rem", color: "var(--text-muted)" }}>{isFlipped ? "←" : "→"}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page ──────────────────────────────────────────────────────────────
 export default function Home() {
   const supabase = createClient();
@@ -84,10 +159,14 @@ export default function Home() {
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [decks, setDecks] = useState<Deck[]>([]);
   const [loading, setLoading] = useState(false);
+  const [decksLoading, setDecksLoading] = useState(false);
   const [flipped, setFlipped] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<"generate" | "mydecks">("generate");
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [showGenerator, setShowGenerator] = useState(false);
+  const [previewDeck, setPreviewDeck] = useState<Deck | null>(null);
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [toastId, setToastId] = useState(0);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
@@ -101,12 +180,24 @@ export default function Home() {
     if (user) loadDecks();
   }, [user]);
 
+  const addToast = useCallback((message: string, type: Toast["type"] = "info") => {
+    const id = Date.now();
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 4000);
+  }, []);
+
+  const removeToast = useCallback((id: number) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
   async function loadDecks() {
+    setDecksLoading(true);
     const { data } = await supabase
       .from("flashcard_decks")
       .select("*")
       .order("created_at", { ascending: false });
     setDecks(data || []);
+    setDecksLoading(false);
   }
 
   async function handleLogin() {
@@ -120,40 +211,57 @@ export default function Home() {
     await supabase.auth.signOut();
     setUser(null);
     setDecks([]);
+    addToast("Sessão encerrada.", "info");
   }
 
   async function handleGenerate() {
     setLoading(true);
     setFlashcards([]);
     setFlipped(null);
-
-    const res = await fetch("/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
-    });
-
-    const data = await res.json();
-    setFlashcards(data.flashcards || []);
-    setLoading(false);
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        addToast(data.error || "Erro ao gerar flashcards.", "error");
+      } else {
+        setFlashcards(data.flashcards || []);
+      }
+    } catch {
+      addToast("Erro de conexão. Tente novamente.", "error");
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleSave() {
-    if (!user) { alert("Faça login para salvar!"); return; }
+    if (!user) { addToast("Faça login para salvar!", "error"); return; }
     const title = text.slice(0, 40) + (text.length > 40 ? "..." : "");
-    await supabase.from("flashcard_decks").insert({ user_id: user.id, title, flashcards });
+    const { error } = await supabase.from("flashcard_decks").insert({ user_id: user.id, title, flashcards });
+    if (error) { addToast("Erro ao salvar o deck.", "error"); return; }
     setSaveSuccess(true);
+    addToast("Deck salvo com sucesso! ✓", "success");
     setTimeout(() => setSaveSuccess(false), 2500);
     loadDecks();
   }
 
   async function handleDelete(id: string) {
     await supabase.from("flashcard_decks").delete().eq("id", id);
+    addToast("Deck removido.", "info");
     loadDecks();
   }
 
   return (
     <>
+      {/* Toast notifications */}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+
+      {/* Deck preview modal */}
+      {previewDeck && <DeckModal deck={previewDeck} onClose={() => setPreviewDeck(null)} />}
+
       {/* Ambient glow */}
       <div className="hero-glow" />
 
@@ -325,7 +433,7 @@ export default function Home() {
               </div>
 
               {/* Feature cards */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", marginTop: "4rem", textAlign: "left" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem", marginTop: "4rem", textAlign: "left" }}>
                 {[
                   { icon: <SparkleIcon />, title: "IA Generativa", desc: "GPT-4o mini gera perguntas inteligentes a partir do seu texto" },
                   { icon: <CardIcon />, title: "Flashcards interativos", desc: "Clique para revelar a resposta e fixar o conteúdo" },
@@ -359,8 +467,10 @@ export default function Home() {
                   onChange={(e) => setText(e.target.value)}
                   style={{ width: "100%", background: "transparent", border: "none", outline: "none", color: "var(--text-primary)", resize: "none", fontSize: "0.9375rem", lineHeight: 1.6 }}
                 />
-                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "0.5rem" }}>
-                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{text.length} caracteres</span>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.5rem" }}>
+                  <span style={{ fontSize: "0.75rem", color: text.trim().length < 20 ? "#f87171" : text.trim().length < 80 ? "#fbbf24" : "#4ade80", transition: "color 0.3s", fontWeight: 500 }}>
+                    {text.trim().length < 20 ? `${20 - text.trim().length} chars para ativar` : `${text.length} caracteres`}
+                  </span>
                 </div>
               </div>
               <button
@@ -435,9 +545,9 @@ export default function Home() {
                     lineHeight: 1.6,
                   }}
                 />
-                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "0.5rem" }}>
-                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                    {text.length} caracteres
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.5rem" }}>
+                  <span style={{ fontSize: "0.75rem", color: text.trim().length < 20 ? "#f87171" : text.trim().length < 80 ? "#fbbf24" : "#4ade80", transition: "color 0.3s", fontWeight: 500 }}>
+                    {text.trim().length < 20 ? `${20 - text.trim().length} chars para ativar` : `${text.length} caracteres`}
                   </span>
                 </div>
               </div>
@@ -479,8 +589,7 @@ export default function Home() {
                   {flashcards.map((card, i) => {
                     const isFlipped = flipped === i;
                     return (
-                      <div
-                        key={i}
+                      <div key={i}
                         onClick={() => setFlipped(isFlipped ? null : i)}
                         className="glass-card"
                         style={{ padding: "1rem 1.25rem", cursor: "pointer", animationDelay: `${i * 60}ms` }}
@@ -490,7 +599,10 @@ export default function Home() {
                             {i + 1}
                           </div>
                           <div style={{ flex: 1 }}>
-                            <p style={{ fontSize: "0.6875rem", fontWeight: 500, color: isFlipped ? "#4ade80" : "var(--accent-light)", marginBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{isFlipped ? "Resposta" : "Pergunta"}</p>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.25rem" }}>
+                              <p style={{ fontSize: "0.6875rem", fontWeight: 500, color: isFlipped ? "#4ade80" : "var(--accent-light)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{isFlipped ? "Resposta" : "Pergunta"}</p>
+                              <span style={{ fontSize: "0.6875rem", color: "var(--text-muted)" }}>{i + 1} / {flashcards.length}</span>
+                            </div>
                             <p style={{ fontSize: "0.875rem", color: "var(--text-primary)", lineHeight: 1.5 }}>{isFlipped ? card.back : card.front}</p>
                           </div>
                           <span style={{ flexShrink: 0, fontSize: "0.6875rem", color: "var(--text-muted)" }}>{isFlipped ? "←" : "→"}</span>
@@ -507,7 +619,13 @@ export default function Home() {
           {/* ── Tab: My Decks (logged in) ── */}
           {user && activeTab === "mydecks" && (
             <div className="animate-fade-in-up">
-              {decks.length === 0 ? (
+              {decksLoading ? (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "1rem" }}>
+                  {[1,2,3].map((n) => (
+                    <div key={n} className="glass-card skeleton" style={{ padding: "1.375rem 1.5rem", height: "90px" }} />
+                  ))}
+                </div>
+              ) : decks.length === 0 ? (
                 <div className="glass-card" style={{ padding: "4rem 2rem", textAlign: "center" }}>
                   <div style={{ width: "56px", height: "56px", borderRadius: "16px", background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.25)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.25rem", color: "var(--accent-light)" }}>
                     <LayersIcon />
@@ -519,7 +637,7 @@ export default function Home() {
               ) : (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "1rem" }}>
                   {decks.map((deck, i) => (
-                    <div key={deck.id} className="glass-card" style={{ padding: "1.375rem 1.5rem", animationDelay: `${i * 60}ms` }}>
+                    <div key={deck.id} className="glass-card" style={{ padding: "1.375rem 1.5rem", animationDelay: `${i * 60}ms`, cursor: "pointer" }} onClick={() => setPreviewDeck(deck)}>
                       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1rem" }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ fontWeight: 600, fontSize: "0.9375rem", color: "var(--text-primary)", marginBottom: "0.5rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{deck.title}</p>
@@ -528,13 +646,12 @@ export default function Home() {
                             <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{new Date(deck.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}</span>
                           </div>
                         </div>
-                        <button className="btn-danger" onClick={() => handleDelete(deck.id)}><TrashIcon /> Deletar</button>
+                        <button className="btn-danger" onClick={(e) => { e.stopPropagation(); handleDelete(deck.id); }}><TrashIcon /> Deletar</button>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
-            </div>
           )}
         </main>
 
